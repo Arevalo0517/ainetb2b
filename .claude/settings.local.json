@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git)",
+      "Bash(npx create-next-app@latest ainet2 --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --package-manager npm --yes)",
+      "Read(//Users/davidaaronarevalocruz/**)",
+      "Bash(npx create-next-app@latest ainet-temp --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --yes)",
+      "Bash(cp -r /Users/davidaaronarevalocruz/ainet-temp/. /Users/davidaaronarevalocruz/Ainet2/)",
+      "Bash(rm -rf /Users/davidaaronarevalocruz/ainet-temp)",
+      "Bash(npm install:*)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/supabase/migrations)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/lib/supabase)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/app/api/proxy/openai)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/app/api/clients)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/app/api/projects)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/app/api/credits)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/app/api/usage)",
+      "Bash(mkdir -p /Users/davidaaronarevalocruz/Ainet2/src/types)",
+      "Bash(npm run:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx shadcn@latest init --yes --base-color slate --style default)",
+      "Bash(npx shadcn@latest init --yes)",
+      "Bash(npx shadcn@latest --version)",
+      "Bash(npx shadcn@4.0.6 init -d)"
+    ]
+  }
+}
