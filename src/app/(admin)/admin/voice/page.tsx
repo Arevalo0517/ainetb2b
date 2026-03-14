@@ -160,7 +160,7 @@ export default function VoiceOverviewPage() {
   const today = new Date().toISOString().slice(0, 10)
   const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
 
-  const llamasHoy = allCalls.filter(c => c.started_at?.slice(0, 10) === today).length
+  const llamadasHoy = allCalls.filter(c => c.started_at?.slice(0, 10) === today).length
   const minutosConsumidos = (allCalls.reduce((acc, c) => acc + c.duration_seconds, 0) / 60).toFixed(1)
   const numerosActivos = phoneNumbers.filter(n => n.status === 'active').length
   const creditosMes = allCalls
@@ -199,7 +199,7 @@ export default function VoiceOverviewPage() {
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Metric cards */}
         <div className="grid grid-cols-4 gap-4">
-          <MetricCard title="Llamadas Hoy"        value={String(llamasHoy)}     subtitle="Llamadas del día"    icon={<Phone size={18}/>}      delay={0} />
+          <MetricCard title="Llamadas Hoy"        value={String(llamadasHoy)}     subtitle="Llamadas del día"    icon={<Phone size={18}/>}      delay={0} />
           <MetricCard title="Minutos Consumidos"  value={minutosConsumidos}     subtitle="Total acumulado"      icon={<Clock size={18}/>}       delay={0.1} />
           <MetricCard title="Números Activos"     value={String(numerosActivos)} subtitle="Números de Twilio"  icon={<PhoneCall size={18}/>}   delay={0.2} />
           <MetricCard title="Créditos de Voz"     value={creditosMes}           subtitle="Mes actual"           icon={<CreditCard size={18}/>}  delay={0.3} />
