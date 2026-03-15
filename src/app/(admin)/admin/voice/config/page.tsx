@@ -9,6 +9,7 @@ interface VoiceConfigForm {
   stt_model: string
   tts_model: string
   tts_language: string
+  stt_language: string
   voice_ai_model: string
   greeting_message: string
   end_call_phrases: string[]
@@ -25,6 +26,7 @@ const DEFAULT_FORM: VoiceConfigForm = {
   stt_model: 'deepgram-nova-2',
   tts_model: 'deepgram-aura-asteria-en',
   tts_language: 'en-US',
+  stt_language: 'en-US',
   voice_ai_model: 'gpt-4o-mini',
   greeting_message: '',
   end_call_phrases: [],
@@ -42,6 +44,7 @@ function configToForm(config: Record<string, unknown>): VoiceConfigForm {
     stt_model: String(config.stt_model ?? DEFAULT_FORM.stt_model),
     tts_model: String(config.tts_model ?? DEFAULT_FORM.tts_model),
     tts_language: String(config.tts_language ?? DEFAULT_FORM.tts_language),
+    stt_language: String(config.stt_language ?? DEFAULT_FORM.stt_language),
     voice_ai_model: String(config.voice_ai_model ?? DEFAULT_FORM.voice_ai_model),
     greeting_message: String(config.greeting_message ?? ''),
     end_call_phrases: Array.isArray(config.end_call_phrases) ? (config.end_call_phrases as string[]) : [],
@@ -135,6 +138,7 @@ export default function VoiceConfigPage() {
       stt_model: form.stt_model,
       tts_model: form.tts_model,
       tts_language: form.tts_language,
+      stt_language: form.stt_language,
       voice_ai_model: form.voice_ai_model,
       greeting_message: form.greeting_message || null,
       end_call_phrases: form.end_call_phrases,
@@ -236,6 +240,11 @@ export default function VoiceConfigPage() {
                 <div>
                   <label className={labelClass}>Idioma TTS</label>
                   <input value={form.tts_language} onChange={e => setField('tts_language', e.target.value)}
+                    placeholder="en-US" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className={labelClass}>Idioma STT</label>
+                  <input value={form.stt_language} onChange={e => setField('stt_language', e.target.value)}
                     placeholder="en-US" className={inputClass} style={inputStyle} />
                 </div>
               </div>
