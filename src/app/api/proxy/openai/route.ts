@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   // 2. Verify project exists and is active
   const { data: project, error: projectError } = await supabase
     .from('projects')
-    .select('id, client_id, status, ai_model, max_tokens_per_message')
+    .select('id, client_id, status, type, ai_model, max_tokens_per_message')
     .eq('id', projectId)
     .single()
 
@@ -73,12 +73,36 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // 4. Parse and forward body to OpenAI
+  // 4. Parse body and enforce type-based limits
   let requestBody: Record<string, unknown>
   try {
     requestBody = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  // Type limits: básico=500, intermedio=1500, avanzado=4000
+  const TYPE_MAX_TOKENS: Record<string, number> = {
+    'chatbot-basico':     500,
+    'chatbot-intermedio': 1500,
+    'chatbot-avanzado':   4000,
+  }
+  const typeLimit = TYPE_MAX_TOKENS[project.type as string] ?? project.max_tokens_per_message ?? 1000
+  const requestedTokens = (requestBody.max_tokens as number) ?? Infinity
+  requestBody.max_tokens = Math.min(requestedTokens, typeLimit)
+
+  // Enforce allowed models per type
+  const TYPE_ALLOWED_MODELS: Record<string, string[]> = {
+    'chatbot-basico':     ['gpt-4o-mini'],
+    'chatbot-intermedio': ['gpt-4o-mini', 'gpt-4o'],
+    'chatbot-avanzado':   ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo'],
+  }
+  const allowedModels = TYPE_ALLOWED_MODELS[project.type as string]
+  if (allowedModels) {
+    const requestedModel = (requestBody.model as string) ?? project.ai_model
+    if (!allowedModels.includes(requestedModel)) {
+      requestBody.model = project.ai_model // fallback to project's configured model
+    }
   }
 
   const openaiApiKey = process.env.OPENAI_API_KEY

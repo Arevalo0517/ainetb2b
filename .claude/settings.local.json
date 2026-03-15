@@ -22,7 +22,19 @@
       "Bash(npx shadcn@latest init --yes --base-color slate --style default)",
       "Bash(npx shadcn@latest init --yes)",
       "Bash(npx shadcn@latest --version)",
-      "Bash(npx shadcn@4.0.6 init -d)"
+      "Bash(npx shadcn@4.0.6 init -d)",
+      "Bash(npx shadcn@4.0.6 add card input label badge avatar progress separator dropdown-menu table --yes)",
+      "Bash(npx supabase:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(git add:*)",
+      "Bash(sed:*)",
+      "Bash(find:*)"
     ]
   }
 }

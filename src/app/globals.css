@@ -4,6 +4,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── AiNet Design Tokens ──────────────────────────────── */
+:root {
+  --ainet-bg:      #0F172A;
+  --ainet-blue:    #2B79FF;
+  --ainet-slate:   #64748B;
+  --ainet-white:   #F8FAFC;
+  --ainet-green:   #10B981;
+  --ainet-card:    rgba(15, 23, 42, 0.7);
+  --ainet-border:  rgba(100, 116, 139, 0.3);
+  --ainet-glow:    0 0 40px rgba(43, 121, 255, 0.25);
+  --ainet-glow-sm: 0 0 20px rgba(43, 121, 255, 0.15);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -47,73 +60,70 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Force dark mode globally ─────────────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #0F172A;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+  --primary: #2B79FF;
+  --primary-foreground: #F8FAFC;
+  --secondary: #1E293B;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: #64748B;
+  --accent: #1E293B;
+  --accent-foreground: #F8FAFC;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(100, 116, 139, 0.25);
+  --input: rgba(100, 116, 139, 0.2);
+  --ring: #2B79FF;
+  --chart-1: #2B79FF;
+  --chart-2: #10B981;
+  --chart-3: #F59E0B;
+  --chart-4: #8B5CF6;
+  --chart-5: #EC4899;
+  --radius: 0.75rem;
+  --sidebar: #0B1120;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #2B79FF;
+  --sidebar-primary-foreground: #F8FAFC;
+  --sidebar-accent: rgba(43, 121, 255, 0.1);
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: rgba(100, 116, 139, 0.2);
+  --sidebar-ring: #2B79FF;
 }
 
+/* No dark class override needed — always dark */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #0F172A;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+  --primary: #2B79FF;
+  --primary-foreground: #F8FAFC;
+  --secondary: #1E293B;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: #64748B;
+  --accent: #1E293B;
+  --accent-foreground: #F8FAFC;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgba(100, 116, 139, 0.25);
+  --input: rgba(100, 116, 139, 0.2);
+  --ring: #2B79FF;
+  --sidebar: #0B1120;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #2B79FF;
+  --sidebar-primary-foreground: #F8FAFC;
+  --sidebar-accent: rgba(43, 121, 255, 0.1);
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: rgba(100, 116, 139, 0.2);
+  --sidebar-ring: #2B79FF;
 }
 
 @layer base {
@@ -121,9 +131,43 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#0F172A] text-[#F8FAFC] antialiased;
+    background-color: #0F172A;
   }
   html {
     @apply font-sans;
+    color-scheme: dark;
   }
 }
+
+/* ── Glassmorphism utility ─────────────────────────────── */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+/* ── Glow effects ──────────────────────────────────────── */
+.glow-blue {
+  box-shadow: 0 0 30px rgba(43, 121, 255, 0.3), 0 0 60px rgba(43, 121, 255, 0.1);
+}
+.glow-blue-sm {
+  box-shadow: 0 0 15px rgba(43, 121, 255, 0.2);
+}
+.glow-green {
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0F172A; }
+::-webkit-scrollbar-thumb { background: #2B79FF40; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2B79FF80; }
