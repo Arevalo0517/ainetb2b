@@ -234,11 +234,13 @@ export default function PhoneNumbersPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [showPurchase, setShowPurchase] = useState(false)
   const [reassignTarget, setReassignTarget] = useState<PhoneNumber | null>(null)
   const [releaseTarget, setReleaseTarget] = useState<PhoneNumber | null>(null)
 
   async function loadData() {
+    setError('')
     try {
       const [nums, projs, cls] = await Promise.all([
         voiceApi.phoneNumbers() as Promise<PhoneNumber[]>,
@@ -249,7 +251,7 @@ export default function PhoneNumbersPage() {
       setProjects(projs)
       setClients(cls)
     } catch {
-      // empty state
+      setError('Error al cargar los números')
     } finally {
       setLoading(false)
     }
@@ -276,7 +278,9 @@ export default function PhoneNumbersPage() {
       </header>
 
       <div className="flex-1 overflow-auto p-6">
-        {loading ? (
+        {error ? (
+          <p className="text-red-400 text-sm text-center py-12">{error}</p>
+        ) : loading ? (
           <p className="text-[#64748B] text-sm text-center py-12">Cargando...</p>
         ) : numbers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -304,10 +308,8 @@ export default function PhoneNumbersPage() {
                     <Phone size={16} className="text-[#2B79FF]" />
                   </div>
                   <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <button className="p-1 rounded text-[#64748B] hover:text-[#F8FAFC] transition-colors">
-                        <MoreHorizontal size={16} />
-                      </button>
+                    <DropdownMenuTrigger className="p-1.5 rounded-md text-[#64748B] hover:text-[#F8FAFC] hover:bg-white/5 transition-colors outline-none">
+                      <MoreHorizontal size={16} />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end"
                       style={{ background: '#0B1120', border: '1px solid rgba(100,116,139,0.2)' }}>
