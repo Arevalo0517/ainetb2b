@@ -36,7 +36,6 @@ function formatDate(iso: string | null): string {
 
 function CallDetailDrawer({ call, onClose }: { call: CallLog; onClose: () => void }) {
   return (
-    <AnimatePresence>
       <div className="fixed inset-0 z-50 flex justify-end">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} />
         <motion.div
@@ -138,7 +137,6 @@ function CallDetailDrawer({ call, onClose }: { call: CallLog; onClose: () => voi
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
   )
 }
 
@@ -146,6 +144,7 @@ export default function VoiceCallsPage() {
   const [calls, setCalls] = useState<CallLog[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [direction, setDirection] = useState('all')
   const [status, setStatus] = useState('all')
@@ -155,6 +154,8 @@ export default function VoiceCallsPage() {
 
   useEffect(() => {
     async function load() {
+      setCalls([])
+      setError('')
       try {
         const params: Parameters<typeof voiceApi.calls>[0] = { limit: 500 }
         if (direction !== 'all') params.direction = direction
@@ -166,7 +167,7 @@ export default function VoiceCallsPage() {
         setCalls(callData)
         setProjects(projectData.filter(p => p.type.startsWith('voz-')))
       } catch {
-        // empty state
+        setError('Error al cargar llamadas')
       } finally {
         setLoading(false)
       }
@@ -174,6 +175,8 @@ export default function VoiceCallsPage() {
     setLoading(true)
     load()
   }, [direction, projectFilter])
+
+  const projectMap = Object.fromEntries(projects.map(p => [p.id, p.name]))
 
   // Client-side filters (status and search are not supported by API)
   const filtered = calls.filter(c => {
@@ -246,7 +249,9 @@ export default function VoiceCallsPage() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {error ? (
+                  <tr><td colSpan={8} className="px-4 py-8 text-center text-red-400">{error}</td></tr>
+                ) : loading ? (
                   <tr><td colSpan={8} className="px-4 py-8 text-center text-[#64748B]">Cargando...</td></tr>
                 ) : paginated.length === 0 ? (
                   <tr><td colSpan={8} className="px-4 py-8 text-center text-[#64748B]">No hay llamadas registradas</td></tr>
@@ -255,7 +260,7 @@ export default function VoiceCallsPage() {
                     style={{ borderBottom: '1px solid rgba(100,116,139,0.08)', cursor: 'pointer' }}
                     className="hover:bg-white/[0.02] transition-colors"
                     onClick={() => setSelectedCall(call)}>
-                    <td className="px-4 py-3 text-[#94A3B8] font-mono">{call.project_id.slice(0, 8)}</td>
+                    <td className="px-4 py-3 text-[#94A3B8]">{projectMap[call.project_id] ?? call.project_id.slice(0, 8)}</td>
                     <td className="px-4 py-3">
                       <span className="px-2 py-0.5 rounded text-[10px] font-medium"
                         style={call.direction === 'inbound'
@@ -299,7 +304,9 @@ export default function VoiceCallsPage() {
         </motion.div>
       </div>
 
-      {selectedCall && <CallDetailDrawer call={selectedCall} onClose={() => setSelectedCall(null)} />}
+      <AnimatePresence>
+        {selectedCall && <CallDetailDrawer call={selectedCall} onClose={() => setSelectedCall(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
