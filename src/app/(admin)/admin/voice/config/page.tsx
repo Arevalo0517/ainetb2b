@@ -6,6 +6,7 @@ import { voiceApi, projectsApi } from '@/lib/api'
 import type { Project } from '@/types/database'
 
 interface VoiceConfigForm {
+  voice_system_prompt: string
   stt_model: string
   tts_model: string
   tts_language: string
@@ -33,6 +34,7 @@ interface VoiceConfigForm {
 }
 
 const DEFAULT_FORM: VoiceConfigForm = {
+  voice_system_prompt: '',
   stt_model: 'deepgram-nova-2',
   tts_model: 'deepgram-aura-2-celeste-es',
   tts_language: 'en-US',
@@ -60,6 +62,7 @@ const DEFAULT_FORM: VoiceConfigForm = {
 
 function configToForm(config: Record<string, unknown>): VoiceConfigForm {
   return {
+    voice_system_prompt: String(config.voice_system_prompt ?? ''),
     stt_model: String(config.stt_model ?? DEFAULT_FORM.stt_model),
     tts_model: String(config.tts_model ?? DEFAULT_FORM.tts_model),
     tts_language: String(config.tts_language ?? DEFAULT_FORM.tts_language),
@@ -177,6 +180,7 @@ export default function VoiceConfigPage() {
     }
 
     const payload = {
+      voice_system_prompt: form.voice_system_prompt || null,
       stt_model: form.stt_model,
       tts_model: form.tts_model,
       tts_language: form.tts_language,
@@ -257,8 +261,23 @@ export default function VoiceConfigPage() {
               </div>
             )}
 
-            {/* 1. Pipeline */}
+            {/* 0. System Prompt */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+              className={sectionClass}>
+              <h2 className={sectionTitle}>Prompt del Agente</h2>
+              <div>
+                <label className={labelClass}>System Prompt</label>
+                <textarea value={form.voice_system_prompt}
+                  onChange={e => setField('voice_system_prompt', e.target.value)}
+                  rows={6}
+                  placeholder="Eres un asistente de ventas amable para la empresa X. Tu objetivo es agendar citas. Habla siempre en español, sé conciso y profesional..."
+                  className={`${inputClass} resize-y`} style={inputStyle} />
+                <p className="text-[10px] text-[#475569] mt-1">Instrucciones de comportamiento del agente. Si se deja vacío, el agente usa el prompt por defecto.</p>
+              </div>
+            </motion.div>
+
+            {/* 1. Pipeline */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
               className={sectionClass}>
               <h2 className={sectionTitle}>Pipeline</h2>
               <div className="grid grid-cols-2 gap-4">
