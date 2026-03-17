@@ -32,6 +32,27 @@ export async function PUT(
     return NextResponse.json({ error: 'Phone number not found' }, { status: 404 })
   }
 
+  // Update the Twilio webhook only for numbers assigned to a project.
+  // When unassigned (project_id = null), leave the webhook as-is.
+  if (project_id && data.twilio_sid) {
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID
+    const twilioAuth = process.env.TWILIO_AUTH_TOKEN
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+
+    if (twilioSid && twilioAuth) {
+      try {
+        const twilio = (await import('twilio')).default
+        const twilioClient = twilio(twilioSid, twilioAuth)
+        await twilioClient.incomingPhoneNumbers(data.twilio_sid).update({
+          voiceUrl: `${appUrl}/api/voice/twilio`,
+          voiceMethod: 'POST',
+        })
+      } catch (err) {
+        console.error('[voice/phone-numbers] Twilio webhook update failed:', err)
+      }
+    }
+  }
+
   return NextResponse.json(data)
 }
 

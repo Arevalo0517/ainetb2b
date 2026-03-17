@@ -56,30 +56,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ imported: 0, message: 'All Twilio numbers are already in the database' })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const webhookUrl = `${appUrl}/api/voice/twilio`
-
-    // Update webhook on Twilio side and insert into DB
-    const inserts = await Promise.all(
-      toImport.map(async (n) => {
-        // Update the webhook URL on Twilio so inbound calls work
-        await twilioClient.incomingPhoneNumbers(n.sid).update({
-          voiceUrl: webhookUrl,
-          voiceMethod: 'POST',
-        })
-
-        return {
-          client_id,
-          project_id: null,
-          phone_number: n.phoneNumber,
-          twilio_sid: n.sid,
-          friendly_name: n.friendlyName,
-          country_code: n.phoneNumber.startsWith('+1') ? 'US' : 'US',
-          status: 'active' as const,
-          sip_domain: process.env.TWILIO_SIP_DOMAIN ?? null,
-        }
-      })
-    )
+    // Only import into DB — do NOT touch the webhook here.
+    // The webhook is set when the number is assigned to a project.
+    const inserts = toImport.map((n) => ({
+      client_id,
+      project_id: null,
+      phone_number: n.phoneNumber,
+      twilio_sid: n.sid,
+      friendly_name: n.friendlyName,
+      country_code: n.phoneNumber.startsWith('+1') ? 'US' : 'US',
+      status: 'active' as const,
+      sip_domain: process.env.TWILIO_SIP_DOMAIN ?? null,
+    }))
 
     const { data: inserted, error } = await supabase
       .from('phone_numbers')
