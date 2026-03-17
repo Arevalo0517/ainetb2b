@@ -89,6 +89,10 @@ export async function PUT(
     'n8n_voice_webhook_url', 'n8n_voice_workflow_id', 'voice_tools',
     'greeting_message', 'end_call_phrases', 'max_call_duration_seconds',
     'silence_timeout_seconds', 'transfer_number', 'livekit_room_prefix',
+    // VAPI-inspired fields
+    'first_message_mode', 'wait_seconds_before_speaking', 'interruption_num_words',
+    'background_sound', 'background_denoising_enabled', 'voicemail_detection_enabled',
+    'analysis_summary_prompt', 'analysis_structured_schema', 'analysis_success_prompt',
   ]
 
   const updateData: Record<string, unknown> = {}

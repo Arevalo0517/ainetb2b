@@ -79,6 +79,8 @@ export const voiceApi = {
     apiFetch(`/api/voice/phone-numbers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   releaseNumber: (id: string) =>
     apiFetch(`/api/voice/phone-numbers/${id}`, { method: 'DELETE' }),
+  syncNumbers: (client_id: string) =>
+    apiFetch('/api/voice/phone-numbers/sync', { method: 'POST', body: JSON.stringify({ client_id }) }),
 
   // Voice config
   getConfig: (projectId: string) => apiFetch(`/api/voice/config/${projectId}`),

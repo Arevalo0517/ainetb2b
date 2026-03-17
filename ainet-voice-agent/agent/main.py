@@ -24,6 +24,7 @@ def main():
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
+            num_idle_processes=1,
         )
     )
 

@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
     tts_characters = 0,
     status = 'completed',
     metadata = {},
+    analysis_summary,
+    analysis_structured_data,
+    analysis_success,
   } = body
 
   if (!call_id || !project_id) {
@@ -83,6 +86,9 @@ export async function POST(req: NextRequest) {
       summary,
       metadata,
       ended_at: new Date().toISOString(),
+      ...(analysis_summary !== undefined && { analysis_summary }),
+      ...(analysis_structured_data !== undefined && { analysis_structured_data }),
+      ...(analysis_success !== undefined && { analysis_success }),
     })
     .eq('id', call_id)
 

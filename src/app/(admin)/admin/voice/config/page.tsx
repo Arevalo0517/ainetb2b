@@ -20,11 +20,21 @@ interface VoiceConfigForm {
   voice_tools: string
   livekit_room_prefix: string
   voice_max_tokens: string
+  // VAPI-inspired
+  first_message_mode: string
+  wait_seconds_before_speaking: string
+  interruption_num_words: string
+  background_sound: string
+  background_denoising_enabled: boolean
+  voicemail_detection_enabled: boolean
+  analysis_summary_prompt: string
+  analysis_structured_schema: string
+  analysis_success_prompt: string
 }
 
 const DEFAULT_FORM: VoiceConfigForm = {
   stt_model: 'deepgram-nova-2',
-  tts_model: 'deepgram-aura-asteria-en',
+  tts_model: 'deepgram-aura-2-celeste-es',
   tts_language: 'en-US',
   stt_language: 'en-US',
   voice_ai_model: 'gpt-4o-mini',
@@ -37,6 +47,15 @@ const DEFAULT_FORM: VoiceConfigForm = {
   voice_tools: '[]',
   livekit_room_prefix: 'voice-',
   voice_max_tokens: '1024',
+  first_message_mode: 'assistant-speaks-first',
+  wait_seconds_before_speaking: '0.4',
+  interruption_num_words: '3',
+  background_sound: 'off',
+  background_denoising_enabled: false,
+  voicemail_detection_enabled: false,
+  analysis_summary_prompt: '',
+  analysis_structured_schema: '',
+  analysis_success_prompt: '',
 }
 
 function configToForm(config: Record<string, unknown>): VoiceConfigForm {
@@ -55,6 +74,17 @@ function configToForm(config: Record<string, unknown>): VoiceConfigForm {
     voice_tools: JSON.stringify(config.voice_tools ?? [], null, 2),
     livekit_room_prefix: String(config.livekit_room_prefix ?? DEFAULT_FORM.livekit_room_prefix),
     voice_max_tokens: String(config.voice_max_tokens ?? DEFAULT_FORM.voice_max_tokens),
+    first_message_mode: String(config.first_message_mode ?? DEFAULT_FORM.first_message_mode),
+    wait_seconds_before_speaking: String(config.wait_seconds_before_speaking ?? DEFAULT_FORM.wait_seconds_before_speaking),
+    interruption_num_words: String(config.interruption_num_words ?? DEFAULT_FORM.interruption_num_words),
+    background_sound: String(config.background_sound ?? DEFAULT_FORM.background_sound),
+    background_denoising_enabled: Boolean(config.background_denoising_enabled ?? false),
+    voicemail_detection_enabled: Boolean(config.voicemail_detection_enabled ?? false),
+    analysis_summary_prompt: String(config.analysis_summary_prompt ?? ''),
+    analysis_structured_schema: config.analysis_structured_schema
+      ? JSON.stringify(config.analysis_structured_schema, null, 2)
+      : '',
+    analysis_success_prompt: String(config.analysis_success_prompt ?? ''),
   }
 }
 
@@ -134,6 +164,18 @@ export default function VoiceConfigPage() {
       return
     }
 
+    let parsedSchema: Record<string, unknown> | null = null
+    if (form.analysis_structured_schema.trim()) {
+      try {
+        parsedSchema = JSON.parse(form.analysis_structured_schema)
+      } catch {
+        setSaveStatus('error')
+        setSaveError('Analysis Schema contiene JSON inválido')
+        setSaving(false)
+        return
+      }
+    }
+
     const payload = {
       stt_model: form.stt_model,
       tts_model: form.tts_model,
@@ -149,6 +191,15 @@ export default function VoiceConfigPage() {
       voice_tools: parsedTools,
       livekit_room_prefix: form.livekit_room_prefix || null,
       voice_max_tokens: parseInt(form.voice_max_tokens) || null,
+      first_message_mode: form.first_message_mode,
+      wait_seconds_before_speaking: parseFloat(form.wait_seconds_before_speaking) || 0.4,
+      interruption_num_words: parseInt(form.interruption_num_words) || 3,
+      background_sound: form.background_sound,
+      background_denoising_enabled: form.background_denoising_enabled,
+      voicemail_detection_enabled: form.voicemail_detection_enabled,
+      analysis_summary_prompt: form.analysis_summary_prompt || null,
+      analysis_structured_schema: parsedSchema,
+      analysis_success_prompt: form.analysis_success_prompt || null,
     }
 
     try {
@@ -224,9 +275,59 @@ export default function VoiceConfigPage() {
                   <label className={labelClass}>TTS Model</label>
                   <select value={form.tts_model} onChange={e => setField('tts_model', e.target.value)}
                     className={inputClass} style={inputStyle}>
-                    <option value="deepgram-aura-asteria-en">Deepgram Aura Asteria (EN)</option>
-                    <option value="deepgram-aura-luna-en">Deepgram Aura Luna (EN)</option>
-                    <option value="deepgram-aura-stella-en">Deepgram Aura Stella (EN)</option>
+                    <optgroup label="Aura 2 — Español Femenino">
+                      <option value="deepgram-aura-2-celeste-es">Celeste — Colombia</option>
+                      <option value="deepgram-aura-2-estrella-es">Estrella — México</option>
+                      <option value="deepgram-aura-2-selena-es">Selena — Latinoamérica</option>
+                      <option value="deepgram-aura-2-carina-es">Carina — España</option>
+                      <option value="deepgram-aura-2-diana-es">Diana — España</option>
+                      <option value="deepgram-aura-2-agustina-es">Agustina — España</option>
+                      <option value="deepgram-aura-2-antonia-es">Antonia — Argentina</option>
+                      <option value="deepgram-aura-2-gloria-es">Gloria — Colombia</option>
+                      <option value="deepgram-aura-2-olivia-es">Olivia — México</option>
+                      <option value="deepgram-aura-2-silvia-es">Silvia — España</option>
+                    </optgroup>
+                    <optgroup label="Aura 2 — Español Masculino">
+                      <option value="deepgram-aura-2-nestor-es">Néstor — España</option>
+                      <option value="deepgram-aura-2-sirio-es">Sirio — México</option>
+                      <option value="deepgram-aura-2-alvaro-es">Álvaro — España</option>
+                      <option value="deepgram-aura-2-aquila-es">Aquila — Latinoamérica</option>
+                      <option value="deepgram-aura-2-javier-es">Javier — México</option>
+                      <option value="deepgram-aura-2-luciano-es">Luciano — México</option>
+                      <option value="deepgram-aura-2-valerio-es">Valerio — México</option>
+                    </optgroup>
+                    <optgroup label="Aura 2 — Inglés Femenino">
+                      <option value="deepgram-aura-2-asteria-en">Asteria (EN)</option>
+                      <option value="deepgram-aura-2-luna-en">Luna (EN)</option>
+                      <option value="deepgram-aura-2-stella-en">Stella (EN)</option>
+                      <option value="deepgram-aura-2-athena-en">Athena (EN)</option>
+                      <option value="deepgram-aura-2-hera-en">Hera (EN)</option>
+                    </optgroup>
+                    <optgroup label="Aura 2 — Inglés Masculino">
+                      <option value="deepgram-aura-2-orion-en">Orion (EN)</option>
+                      <option value="deepgram-aura-2-arcas-en">Arcas (EN)</option>
+                      <option value="deepgram-aura-2-perseus-en">Perseus (EN)</option>
+                      <option value="deepgram-aura-2-angus-en">Angus (EN)</option>
+                      <option value="deepgram-aura-2-orpheus-en">Orpheus (EN)</option>
+                      <option value="deepgram-aura-2-helios-en">Helios (EN)</option>
+                      <option value="deepgram-aura-2-zeus-en">Zeus (EN)</option>
+                    </optgroup>
+                    <optgroup label="Aura (Legacy) — Inglés Femenino">
+                      <option value="deepgram-aura-asteria-en">Asteria (EN)</option>
+                      <option value="deepgram-aura-luna-en">Luna (EN)</option>
+                      <option value="deepgram-aura-stella-en">Stella (EN)</option>
+                      <option value="deepgram-aura-athena-en">Athena (EN)</option>
+                      <option value="deepgram-aura-hera-en">Hera (EN)</option>
+                    </optgroup>
+                    <optgroup label="Aura (Legacy) — Inglés Masculino">
+                      <option value="deepgram-aura-orion-en">Orion (EN)</option>
+                      <option value="deepgram-aura-arcas-en">Arcas (EN)</option>
+                      <option value="deepgram-aura-perseus-en">Perseus (EN)</option>
+                      <option value="deepgram-aura-angus-en">Angus (EN)</option>
+                      <option value="deepgram-aura-orpheus-en">Orpheus (EN)</option>
+                      <option value="deepgram-aura-helios-en">Helios (EN)</option>
+                      <option value="deepgram-aura-zeus-en">Zeus (EN)</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
@@ -240,12 +341,12 @@ export default function VoiceConfigPage() {
                 <div>
                   <label className={labelClass}>Idioma TTS</label>
                   <input value={form.tts_language} onChange={e => setField('tts_language', e.target.value)}
-                    placeholder="en-US" className={inputClass} style={inputStyle} />
+                    placeholder="en-US · es · es-419" className={inputClass} style={inputStyle} />
                 </div>
                 <div>
                   <label className={labelClass}>Idioma STT</label>
                   <input value={form.stt_language} onChange={e => setField('stt_language', e.target.value)}
-                    placeholder="en-US" className={inputClass} style={inputStyle} />
+                    placeholder="en-US · es · es-419" className={inputClass} style={inputStyle} />
                 </div>
               </div>
             </motion.div>
@@ -319,8 +420,98 @@ export default function VoiceConfigPage() {
               </div>
             </motion.div>
 
-            {/* 4. Avanzado */}
+            {/* 4. Conversación */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className={sectionClass}>
+              <h2 className={sectionTitle}>Conversación</h2>
+              <div>
+                <label className={labelClass}>Modo de inicio</label>
+                <select value={form.first_message_mode} onChange={e => setField('first_message_mode', e.target.value)}
+                  className={inputClass} style={inputStyle}>
+                  <option value="assistant-speaks-first">El agente habla primero (Inbound recomendado)</option>
+                  <option value="assistant-waits-for-user">El agente espera al usuario (Outbound recomendado)</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Pausa antes de hablar (seg)</label>
+                  <input type="number" step="0.1" min="0" max="3"
+                    value={form.wait_seconds_before_speaking}
+                    onChange={e => setField('wait_seconds_before_speaking', e.target.value)}
+                    className={inputClass} style={inputStyle} />
+                  <p className="text-[10px] text-[#475569] mt-1">Silencio del usuario antes de que el agente responda. Default: 0.4s</p>
+                </div>
+                <div>
+                  <label className={labelClass}>Palabras para interrumpir</label>
+                  <input type="number" min="0" max="10"
+                    value={form.interruption_num_words}
+                    onChange={e => setField('interruption_num_words', e.target.value)}
+                    className={inputClass} style={inputStyle} />
+                  <p className="text-[10px] text-[#475569] mt-1">Palabras del usuario para detener al agente. 0 = interrumpir inmediatamente</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Sonido de fondo</label>
+                  <select value={form.background_sound} onChange={e => setField('background_sound', e.target.value)}
+                    className={inputClass} style={inputStyle}>
+                    <option value="off">Sin sonido</option>
+                    <option value="office">Oficina (PSTN/teléfono)</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-3 pt-1">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={form.background_denoising_enabled}
+                      onChange={e => setForm(f => ({ ...f, background_denoising_enabled: e.target.checked }))}
+                      className="w-4 h-4 rounded accent-[#2B79FF]" />
+                    <div>
+                      <span className="text-xs text-[#94A3B8] font-medium">Filtrado de ruido</span>
+                      <p className="text-[10px] text-[#475569]">Elimina ruido de fondo del usuario</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={form.voicemail_detection_enabled}
+                      onChange={e => setForm(f => ({ ...f, voicemail_detection_enabled: e.target.checked }))}
+                      className="w-4 h-4 rounded accent-[#2B79FF]" />
+                    <div>
+                      <span className="text-xs text-[#94A3B8] font-medium">Detectar buzón de voz</span>
+                      <p className="text-[10px] text-[#475569]">Útil para llamadas salientes</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 5. Análisis post-llamada */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+              className={sectionClass}>
+              <h2 className={sectionTitle}>Análisis Post-Llamada</h2>
+              <p className="text-[10px] text-[#64748B] -mt-2 mb-2">El LLM analiza el transcript al finalizar cada llamada. Deja vacío para desactivar.</p>
+              <div>
+                <label className={labelClass}>Prompt de resumen</label>
+                <textarea value={form.analysis_summary_prompt}
+                  onChange={e => setField('analysis_summary_prompt', e.target.value)}
+                  rows={3} placeholder="Ej: Resume en 2-3 oraciones de qué trató esta llamada y cuál fue el resultado."
+                  className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+              <div>
+                <label className={labelClass}>Prompt de evaluación de éxito</label>
+                <textarea value={form.analysis_success_prompt}
+                  onChange={e => setField('analysis_success_prompt', e.target.value)}
+                  rows={2} placeholder="Ej: ¿Agendó el usuario una cita? Responde solo 'sí' o 'no'."
+                  className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+              <div>
+                <label className={labelClass}>Schema de datos estructurados (JSON Schema opcional)</label>
+                <textarea value={form.analysis_structured_schema}
+                  onChange={e => setField('analysis_structured_schema', e.target.value)}
+                  rows={4} placeholder={`{\n  "nombre": "string",\n  "interes": "string",\n  "cita_agendada": "boolean"\n}`}
+                  className={`${inputClass} resize-none font-mono text-xs`} style={inputStyle} />
+              </div>
+            </motion.div>
+
+            {/* 6. Avanzado */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
               className={sectionClass}>
               <h2 className={sectionTitle}>Avanzado</h2>
               <div className="grid grid-cols-2 gap-4">

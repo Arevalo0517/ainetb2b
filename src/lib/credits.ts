@@ -22,8 +22,8 @@ export const VOICE_PRICING = {
   deepgram_tts_per_character: 0.000015, // Aura per character
 }
 
-const MARGIN_MULTIPLIER = 3       // 3x margin over OpenAI base cost
-const USD_PER_CREDIT    = 0.01    // 1 credit = $0.01 USD
+const MARGIN_MULTIPLIER = 3       // 3x margin over base cost
+const USD_PER_CREDIT    = 1       // 1 credit = $1.00 USD
 
 /**
  * Calculate cost and credits consumed for an API call.

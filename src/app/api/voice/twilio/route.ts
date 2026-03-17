@@ -1,44 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
 /**
  * POST /api/voice/twilio
  *
- * Twilio inbound call webhook. Maps the dialed phone number to a project,
- * creates a call_log, and returns TwiML to connect the caller to a
- * LiveKit room via SIP.
+ * Twilio inbound call webhook. Maps the dialed number to a project,
+ * creates a LiveKit room, logs the call, and returns TwiML to connect
+ * the caller via SIP to LiveKit.
  */
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
-  const toNumber = formData.get('To') as string | null
-  const fromNumber = formData.get('From') as string | null
-  const callSid = formData.get('CallSid') as string | null
+  const toNumber  = formData.get('To')      as string | null
+  const fromNumber = formData.get('From')   as string | null
+  const callSid   = formData.get('CallSid') as string | null
 
   if (!toNumber) {
-    return new Response('<Response><Say>System error.</Say></Response>', {
-      status: 400,
-      headers: { 'Content-Type': 'text/xml' },
-    })
+    return xml('<Response><Say>System error.</Say></Response>', 400)
   }
 
   const supabase = createAdminClient()
 
-  // Look up the phone number → project
+  // 1. Map phone number → project
   const { data: phoneNumber, error: phoneError } = await supabase
     .from('phone_numbers')
-    .select('id, project_id, client_id, sip_domain')
+    .select('id, project_id, client_id')
     .eq('phone_number', toNumber)
     .eq('status', 'active')
     .single()
 
-  if (phoneError || !phoneNumber || !phoneNumber.project_id) {
-    return new Response(
-      '<Response><Say>This number is not configured.</Say><Hangup/></Response>',
-      { status: 200, headers: { 'Content-Type': 'text/xml' } }
-    )
+  if (phoneError || !phoneNumber?.project_id) {
+    return xml('<Response><Say>This number is not configured.</Say><Hangup/></Response>')
   }
 
-  // Validate project is active
+  // 2. Validate project is active
   const { data: project } = await supabase
     .from('projects')
     .select('id, client_id, status')
@@ -46,13 +40,10 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (!project || project.status !== 'active') {
-    return new Response(
-      '<Response><Say>This service is currently unavailable.</Say><Hangup/></Response>',
-      { status: 200, headers: { 'Content-Type': 'text/xml' } }
-    )
+    return xml('<Response><Say>This service is currently unavailable.</Say><Hangup/></Response>')
   }
 
-  // Validate client has credits
+  // 3. Validate client has credits
   const { data: client } = await supabase
     .from('clients')
     .select('id, credit_balance, status')
@@ -60,13 +51,10 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (!client || client.status !== 'active' || client.credit_balance <= 0) {
-    return new Response(
-      '<Response><Say>This service is currently unavailable.</Say><Hangup/></Response>',
-      { status: 200, headers: { 'Content-Type': 'text/xml' } }
-    )
+    return xml('<Response><Say>This service is currently unavailable.</Say><Hangup/></Response>')
   }
 
-  // Create call_log
+  // 4. Create call log
   const { data: callLog } = await supabase
     .from('call_logs')
     .insert({
@@ -83,31 +71,43 @@ export async function POST(req: NextRequest) {
     .single()
 
   const callId = callLog?.id ?? crypto.randomUUID()
-  const roomName = `voice-${project.id}-${callId}`
+  // Use short IDs to keep SIP URI username under 40 chars (SIP limit)
+  const shortProject = project.id.split('-')[0]  // first 8 hex chars
+  const shortCall    = callId.split('-')[0]       // first 8 hex chars
+  const roomName = `v-${shortProject}-${shortCall}`
 
-  // Build SIP URI for LiveKit
-  const sipDomain = phoneNumber.sip_domain ?? process.env.LIVEKIT_SIP_DOMAIN ?? 'livekit.sip.twilio.com'
-
-  // Update call_log with room name
+  // Note: room is created automatically by LiveKit Individual Dispatch rule.
+  // Store roomName so the agent can look up this call_log via sip.trunkPhoneNumber.
   await supabase
     .from('call_logs')
     .update({ livekit_room_name: roomName })
     .eq('id', callId)
 
-  // Return TwiML to connect via SIP to LiveKit
+  // 5. Connect caller to LiveKit via SIP
+  const sipDomain = process.env.LIVEKIT_SIP_DOMAIN ?? ''
+
+  if (!sipDomain) {
+    // Fallback: keep caller connected with silence while agent joins
+    // This won't produce audio — SIP domain is required
+    console.error('[twilio] LIVEKIT_SIP_DOMAIN not set. Audio will not work.')
+    return xml(`<Response><Pause length="60"/></Response>`)
+  }
+
+  // TwiML: Dial the LiveKit SIP inbound URI
+  // LiveKit SIP inbound format: sip:<roomName>@<sip-domain>
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Connect>
-    <Stream url="wss://${sipDomain}">
-      <Parameter name="room" value="${roomName}" />
-      <Parameter name="projectId" value="${project.id}" />
-      <Parameter name="callId" value="${callId}" />
-    </Stream>
-  </Connect>
+  <Dial>
+    <Sip>sip:${encodeURIComponent(roomName)}@${sipDomain}</Sip>
+  </Dial>
 </Response>`
 
-  return new Response(twiml, {
-    status: 200,
+  return xml(twiml)
+}
+
+function xml(body: string, status = 200) {
+  return new Response(body, {
+    status,
     headers: { 'Content-Type': 'text/xml' },
   })
 }

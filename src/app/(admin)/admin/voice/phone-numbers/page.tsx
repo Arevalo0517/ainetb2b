@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, X, Phone, MoreHorizontal } from 'lucide-react'
+import { Plus, X, Phone, MoreHorizontal, RefreshCw } from 'lucide-react'
 import { voiceApi, projectsApi, clientsApi } from '@/lib/api'
 import type { PhoneNumber, Project, Client } from '@/types/database'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -12,6 +12,91 @@ const STATUS_STYLE: Record<string, React.CSSProperties> = {
   pending:  { background: 'rgba(245,158,11,0.15)',   color: '#F59E0B' },
 }
 const STATUS_LABELS: Record<string, string> = { active: 'Activo', released: 'Liberado', pending: 'Pendiente' }
+
+function SyncModal({
+  onClose, onSynced, clients,
+}: {
+  onClose: () => void
+  onSynced: () => void
+  clients: Client[]
+}) {
+  const [clientId, setClientId] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState<{ imported: number; message?: string } | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!clientId) { setError('Selecciona un cliente'); return }
+    setLoading(true)
+    setError('')
+    try {
+      const res = await voiceApi.syncNumbers(clientId) as { imported: number; message?: string }
+      setResult(res)
+      onSynced()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al sincronizar')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative z-10 w-full max-w-md">
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-bold text-[#F8FAFC]">Sincronizar desde Twilio</h2>
+            <button onClick={onClose} className="text-[#64748B] hover:text-[#F8FAFC]"><X size={18} /></button>
+          </div>
+          <p className="text-xs text-[#64748B] mb-4">
+            Importa los números que ya tienes en tu cuenta de Twilio y aún no están en la base de datos.
+          </p>
+          {error && (
+            <div className="mb-4 px-3 py-2 rounded-lg text-xs text-red-400"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              {error}
+            </div>
+          )}
+          {result ? (
+            <div className="space-y-4">
+              <div className="px-4 py-3 rounded-lg text-sm text-[#10B981]"
+                style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                {result.imported > 0
+                  ? `✓ ${result.imported} número${result.imported > 1 ? 's' : ''} importado${result.imported > 1 ? 's' : ''} correctamente`
+                  : result.message ?? 'Sin cambios'}
+              </div>
+              <button onClick={onClose}
+                className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+                style={{ background: '#2B79FF' }}>
+                Cerrar
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Asignar a cliente *</label>
+                <select value={clientId} onChange={e => setClientId(e.target.value)} required
+                  className="w-full px-3 py-2.5 rounded-lg text-sm text-[#F8FAFC] outline-none focus:ring-1 focus:ring-[#2B79FF]"
+                  style={{ background: 'rgba(100,116,139,0.12)', border: '1px solid rgba(100,116,139,0.25)' }}>
+                  <option value="">Seleccionar cliente...</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+                </select>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: '#2B79FF' }}>
+                {loading ? <><RefreshCw size={14} className="animate-spin" /> Sincronizando...</> : 'Sincronizar'}
+              </button>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
 
 function PurchaseModal({
   onClose, onPurchased, projects, clients,
@@ -236,6 +321,7 @@ export default function PhoneNumbersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showPurchase, setShowPurchase] = useState(false)
+  const [showSync, setShowSync] = useState(false)
   const [reassignTarget, setReassignTarget] = useState<PhoneNumber | null>(null)
   const [releaseTarget, setReleaseTarget] = useState<PhoneNumber | null>(null)
 
@@ -269,12 +355,20 @@ export default function PhoneNumbersPage() {
           <h1 className="text-lg font-bold text-[#F8FAFC]">Números de Teléfono</h1>
           <p className="text-xs text-[#64748B]">Gestión de números Twilio asignados</p>
         </div>
-        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          onClick={() => setShowPurchase(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-          style={{ background: '#2B79FF', boxShadow: '0 0 15px rgba(43,121,255,0.35)' }}>
-          <Plus size={15} /> Comprar Número
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => setShowSync(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: 'rgba(100,116,139,0.15)', border: '1px solid rgba(100,116,139,0.3)', color: '#94A3B8' }}>
+            <RefreshCw size={14} /> Sincronizar Twilio
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => setShowPurchase(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+            style={{ background: '#2B79FF', boxShadow: '0 0 15px rgba(43,121,255,0.35)' }}>
+            <Plus size={15} /> Comprar Número
+          </motion.button>
+        </div>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -346,6 +440,14 @@ export default function PhoneNumbersPage() {
           </div>
         )}
       </div>
+
+      {showSync && (
+        <SyncModal
+          onClose={() => setShowSync(false)}
+          onSynced={loadData}
+          clients={clients}
+        />
+      )}
 
       {showPurchase && (
         <PurchaseModal

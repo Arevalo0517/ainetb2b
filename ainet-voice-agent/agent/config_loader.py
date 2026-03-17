@@ -23,6 +23,44 @@ def _get_supabase():
     return _supabase_client
 
 
+async def resolve_room_ids(room_name: str) -> Optional[tuple[str, str]]:
+    """Look up full project_id and call_id from livekit_room_name in call_logs."""
+    try:
+        supabase = _get_supabase()
+        result = (
+            supabase.table("call_logs")
+            .select("id, project_id")
+            .eq("livekit_room_name", room_name)
+            .single()
+            .execute()
+        )
+        if result.data:
+            return result.data["project_id"], result.data["id"]
+        return None
+    except Exception as e:
+        logger.error(f"Failed to resolve room {room_name}: {e}")
+        return None
+
+
+async def resolve_call_by_sid(twilio_call_sid: str) -> Optional[tuple[str, str]]:
+    """Look up full project_id and call_id from twilio_call_sid in call_logs."""
+    try:
+        supabase = _get_supabase()
+        result = (
+            supabase.table("call_logs")
+            .select("id, project_id")
+            .eq("twilio_call_sid", twilio_call_sid)
+            .single()
+            .execute()
+        )
+        if result.data:
+            return result.data["project_id"], result.data["id"]
+        return None
+    except Exception as e:
+        logger.error(f"Failed to resolve call by Twilio SID {twilio_call_sid}: {e}")
+        return None
+
+
 async def load_project_config(project_id: str) -> Optional[dict]:
     """Fetch voice_config for a project from Supabase."""
     try:

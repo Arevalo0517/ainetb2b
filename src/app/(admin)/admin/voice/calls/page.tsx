@@ -120,19 +120,74 @@ function CallDetailDrawer({ call, onClose }: { call: CallLog; onClose: () => voi
 
             {/* Cost breakdown */}
             <div className="glass-card rounded-xl p-4">
-              <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-3">Costo</h3>
+              <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-3">Desglose de Costo</h3>
               {!call.cost_breakdown || Object.keys(call.cost_breakdown).length === 0 ? (
                 <p className="text-xs text-[#64748B]">Sin datos de costo</p>
-              ) : (
-                <div className="space-y-1">
-                  {Object.entries(call.cost_breakdown).map(([k, v]) => (
-                    <div key={k} className="flex justify-between text-xs">
-                      <span className="text-[#64748B] capitalize">{k.replace(/_/g, ' ')}</span>
-                      <span className="text-[#94A3B8]">{String(v)}</span>
+              ) : (() => {
+                const bd = call.cost_breakdown as Record<string, number>
+                const MARGIN = 3
+                const USD_PER_CREDIT = 1
+                const total = bd.total ?? 0
+                const rows: { label: string; sub: string; usd: number; color: string }[] = [
+                  {
+                    label: 'Twilio (telefonía)',
+                    sub: `${Math.ceil((call.duration_seconds ?? 0) / 60)} min × $${call.direction === 'inbound' ? '0.013' : '0.014'}/min`,
+                    usd: bd.twilio ?? 0,
+                    color: '#F59E0B',
+                  },
+                  {
+                    label: 'Deepgram STT',
+                    sub: `${Math.ceil((call.duration_seconds ?? 0) / 60)} min × $0.0043/min`,
+                    usd: bd.stt ?? 0,
+                    color: '#2B79FF',
+                  },
+                  {
+                    label: 'Deepgram TTS',
+                    sub: `caracteres sintetizados`,
+                    usd: bd.tts ?? 0,
+                    color: '#8B5CF6',
+                  },
+                  {
+                    label: 'OpenAI LLM',
+                    sub: `tokens entrada/salida`,
+                    usd: bd.llm ?? 0,
+                    color: '#10B981',
+                  },
+                ]
+                return (
+                  <div className="space-y-3">
+                    {rows.map(row => {
+                      const pct = total > 0 ? (row.usd / total) * 100 : 0
+                      const credits = (row.usd * MARGIN) / USD_PER_CREDIT
+                      return (
+                        <div key={row.label}>
+                          <div className="flex justify-between text-xs mb-0.5">
+                            <span className="font-medium" style={{ color: row.color }}>{row.label}</span>
+                            <span className="text-[#F8FAFC] font-mono">${row.usd.toFixed(5)}</span>
+                          </div>
+                          <div className="flex justify-between text-[10px] mb-1">
+                            <span className="text-[#64748B]">{row.sub}</span>
+                            <span className="text-[#64748B]">{credits.toFixed(2)} cr · {pct.toFixed(0)}%</span>
+                          </div>
+                          <div className="h-1 rounded-full" style={{ background: 'rgba(100,116,139,0.2)' }}>
+                            <div className="h-1 rounded-full transition-all" style={{ width: `${pct}%`, background: row.color }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <div className="border-t pt-3 mt-2" style={{ borderColor: 'rgba(100,116,139,0.2)' }}>
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="text-[#94A3B8]">Total base</span>
+                        <span className="text-[#F8FAFC] font-mono">${total.toFixed(5)} USD</span>
+                      </div>
+                      <div className="flex justify-between text-xs mt-0.5">
+                        <span className="text-[#64748B]">Con margen 3× → créditos</span>
+                        <span className="font-mono" style={{ color: '#10B981' }}>{call.credits_used?.toFixed(2) ?? '—'} cr</span>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </motion.div>
