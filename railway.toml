@@ -1,6 +1,5 @@
 [build]
-dockerfilePath = "ainet-voice-agent/Dockerfile"
-buildContext = "ainet-voice-agent"
+dockerfilePath = "Dockerfile.railway"
 
 [deploy]
 startCommand = "python -m agent.main start"
