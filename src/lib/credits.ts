@@ -20,6 +20,7 @@ export const VOICE_PRICING = {
   twilio_outbound_per_minute: 0.014,
   deepgram_stt_per_minute: 0.0043,     // Nova-2 pay-as-you-go
   deepgram_tts_per_character: 0.000015, // Aura per character
+  livekit_per_minute: 0.002,           // ~$0.001/participant/min × 2 participants (SIP + agent)
 }
 
 const MARGIN_MULTIPLIER = 3       // 3x margin over base cost
@@ -66,13 +67,14 @@ export function calculateVoiceCredits(
     : VOICE_PRICING.twilio_outbound_per_minute)
   const sttCost = minutes * VOICE_PRICING.deepgram_stt_per_minute
   const ttsCost = ttsCharacters * VOICE_PRICING.deepgram_tts_per_character
+  const livekitCost = minutes * VOICE_PRICING.livekit_per_minute
 
   const llmPricing = MODEL_PRICING[llmModel] ?? MODEL_PRICING['gpt-4o-mini']
   const llmCost =
     (tokensInput / 1_000_000) * llmPricing.input +
     (tokensOutput / 1_000_000) * llmPricing.output
 
-  const totalCostUsd = twilioCost + sttCost + ttsCost + llmCost
+  const totalCostUsd = twilioCost + sttCost + ttsCost + livekitCost + llmCost
   const costWithMargin = totalCostUsd * MARGIN_MULTIPLIER
   const creditsConsumed = costWithMargin / USD_PER_CREDIT
 
@@ -83,6 +85,7 @@ export function calculateVoiceCredits(
       twilio: parseFloat(twilioCost.toFixed(6)),
       stt: parseFloat(sttCost.toFixed(6)),
       tts: parseFloat(ttsCost.toFixed(6)),
+      livekit: parseFloat(livekitCost.toFixed(6)),
       llm: parseFloat(llmCost.toFixed(6)),
     },
   }
