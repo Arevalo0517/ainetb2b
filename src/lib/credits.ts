@@ -20,7 +20,7 @@ export const VOICE_PRICING = {
   twilio_outbound_per_minute: 0.014,
   deepgram_stt_per_minute: 0.0043,     // Nova-2 pay-as-you-go
   deepgram_tts_per_character: 0.000015, // Aura per character
-  livekit_per_minute: 0.002,           // ~$0.001/participant/min × 2 participants (SIP + agent)
+  livekit_per_minute: 0.014,           // $0.010 agent session + $0.004 telephony SIP (Build/Ship plan)
 }
 
 const MARGIN_MULTIPLIER = 3       // 3x margin over base cost
