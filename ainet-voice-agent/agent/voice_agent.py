@@ -161,22 +161,31 @@ async def entrypoint(ctx: JobContext):
         await session.say(greeting)
         tracker.add_entry("assistant", greeting)
 
+    # Wait for all participants to leave before reporting billing.
+    # Using an asyncio.Event avoids create_task which can be cancelled by
+    # the livekit-agents framework before the HTTP call completes.
+    disconnect_event = asyncio.Event()
+
     @ctx.room.on("participant_disconnected")
     def on_disconnect(participant):
-        if ctx.room.remote_participants:
-            return
-        duration = int(time.time() - start_time)
-        logger.info(f"Call ended. Duration: {duration}s")
-        analysis_config = {
-            "analysis_summary_prompt": config.get("analysis_summary_prompt"),
-            "analysis_structured_schema": config.get("analysis_structured_schema"),
-            "analysis_success_prompt": config.get("analysis_success_prompt"),
-            "voice_ai_model": llm_model,
-        }
-        asyncio.create_task(report_call_end(
-            call_id=call_id,
-            project_id=project_id,
-            duration_seconds=duration,
-            tracker=tracker,
-            analysis_config=analysis_config,
-        ))
+        if not ctx.room.remote_participants:
+            disconnect_event.set()
+
+    await disconnect_event.wait()
+
+    duration = int(time.time() - start_time)
+    logger.info(f"Call ended. Duration: {duration}s")
+
+    analysis_config = {
+        "analysis_summary_prompt": config.get("analysis_summary_prompt"),
+        "analysis_structured_schema": config.get("analysis_structured_schema"),
+        "analysis_success_prompt": config.get("analysis_success_prompt"),
+        "voice_ai_model": llm_model,
+    }
+    await report_call_end(
+        call_id=call_id,
+        project_id=project_id,
+        duration_seconds=duration,
+        tracker=tracker,
+        analysis_config=analysis_config,
+    )
