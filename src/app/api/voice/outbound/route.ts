@@ -134,10 +134,18 @@ export async function POST(req: NextRequest) {
 
     const sipDomain = phoneNumber.sip_domain ?? process.env.LIVEKIT_SIP_DOMAIN ?? 'livekit.sip.twilio.com'
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? ''
+    const statusCallbackUrl = appUrl ? `${appUrl}/api/voice/twilio/status` : undefined
+
     const call = await twilioClient.calls.create({
       to: to_number,
       from: phoneNumber.phone_number,
       twiml: `<Response><Connect><Stream url="wss://${sipDomain}"><Parameter name="room" value="${roomName}" /><Parameter name="projectId" value="${project.id}" /><Parameter name="callId" value="${callLog.id}" /></Stream></Connect></Response>`,
+      ...(statusCallbackUrl && {
+        statusCallback: statusCallbackUrl,
+        statusCallbackMethod: 'POST',
+        statusCallbackEvent: ['completed', 'failed', 'busy', 'no-answer', 'canceled'],
+      }),
     })
 
     // Update call_log with Twilio SID

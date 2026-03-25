@@ -95,10 +95,14 @@ export async function POST(req: NextRequest) {
 
   // TwiML: Dial the LiveKit SIP inbound URI
   // LiveKit SIP inbound format: sip:<roomName>@<sip-domain>
+  // statusCallback is a fallback — updates call status if the Python agent doesn't report back
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? ''
+  const statusCallbackUrl = appUrl ? `${appUrl}/api/voice/twilio/status` : ''
+
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Dial>
-    <Sip>sip:${encodeURIComponent(roomName)}@${sipDomain}</Sip>
+  <Dial${statusCallbackUrl ? ` action="${statusCallbackUrl}" method="POST"` : ''}>
+    <Sip${statusCallbackUrl ? ` statusCallback="${statusCallbackUrl}" statusCallbackMethod="POST"` : ''}>sip:${encodeURIComponent(roomName)}@${sipDomain}</Sip>
   </Dial>
 </Response>`
 
